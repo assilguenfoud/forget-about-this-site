@@ -1,7 +1,7 @@
 import * as iconImage from "./icons/icon.png";
 
 const manifest = {
-  manifest_version: 2,
+  manifest_version: 3,
   name: "__MSG_extensionName__",
   description: "__MSG_extensionDescription__",
   version: process.env.npm_package_version,
@@ -15,24 +15,27 @@ const manifest = {
     "history",
     "storage",
     "notifications",
+    "scripting",
   ],
   background: {
-    scripts: ["/background.js"],
+    scripts: undefined,
+    service_worker: "/background.js",
   },
-  applications: undefined,
+  browser_specific_settings: undefined,
   icons: {
     256: iconImage,
   },
-  page_action: {
+  action: {
     default_icon: iconImage,
     browser_style: undefined,
   },
   options_ui: {
     page: "/options.html",
     browser_style: undefined,
+    open_in_tab: true
   },
   commands: {
-    _execute_page_action: {
+    _execute_action: {
       suggested_key: {
         default: "Ctrl+Shift+X",
       }, },
@@ -40,12 +43,16 @@ const manifest = {
 };
 
 if (process.env.BROWSER === "firefox") {
-  manifest.applications = {
+  manifest.browser_specific_settings = {
     gecko: {
       id: `${process.env.npm_package_name}@blaise.io`, },
   };
-  manifest.options_ui.browser_style = true;
-  manifest.page_action.browser_style = false;
+  manifest.background = {
+    scripts: ["background.js"],
+    service_worker: undefined,
+  },
+  manifest.options_ui.browser_style = false;
+  manifest.action.browser_style = false;
 }
 
 module.exports = JSON.stringify(manifest, null, 2);

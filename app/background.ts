@@ -4,14 +4,12 @@ import defaultOptions from "./options/defaults";
 
 const deleteOptions = ["cookies", "localStorage", "history", "downloads"];
 
-if (process.env.BROWSER !== "firefox") {
-  window.browser = require("webextension-polyfill"); // tslint:disable-line
-}
+var browser = require("webextension-polyfill");
 
-browser.tabs.onUpdated.addListener((tabId) => browser.pageAction.show(tabId));
+// browser.tabs.onUpdated.addListener((tabId) => browser.action.show(tabId));
 console.info("Forget about this site loaded");
 
-browser.pageAction.onClicked.addListener(async (tab) => {
+browser.action.onClicked.addListener(async (tab) => {
   const result = await browser.storage.sync.get("options");
   const options = { ...defaultOptions, ...(result.options || {}) };
   console.info({ options });
@@ -32,11 +30,12 @@ browser.pageAction.onClicked.addListener(async (tab) => {
 
   if (options.askConfirmation) {
     const ask = browser.i18n.getMessage("confirmationPrompt", [removeText]);
-    const confirm = await browser.tabs.executeScript({
-      // NotificationOptions.buttons not supported in Firefox.
-      code: `confirm(${JSON.stringify(ask)})`,
+    const confirm = await browser.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (message: string) => confirm(message),
+      args: [ask],
     });
-    if (confirm && !confirm[0]) {
+    if (confirm && !confirm[0].result) {
       return;
     }
   }
